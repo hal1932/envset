@@ -1,0 +1,94 @@
+﻿<Window x:Class="envset.Views.ShowEnvWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+        xmlns:l="http://schemas.livet-mvvm.net/2011/wpf"
+        xmlns:v="clr-namespace:envset.Views"
+        xmlns:vm="clr-namespace:envset.ViewModels"
+        xmlns:b="clr-namespace:envset.Behaviors"
+        Title="設定済み環境変数" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner"
+        Name="RootWindow">
+
+    <Window.DataContext>
+        <vm:ShowEnvWindowViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <v:DebugConverter x:Key="debugConverter" />
+    </Window.Resources>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="ContentRendered">
+            <l:LivetCallMethodAction MethodTarget="{Binding}" MethodName="Initialize"/>
+        </i:EventTrigger>
+        <i:EventTrigger EventName="Closed">
+            <l:DataContextDisposeAction/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <Grid>
+        <StackPanel>
+            <Button Content="変更を反映する" Margin="3" HorizontalAlignment="Left">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Click">
+                        <l:LivetCallMethodAction MethodTarget="{Binding}"
+                                                 MethodName="EditComplete"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            
+            <TabControl ItemsSource="{Binding EnvSetList}"
+                        SelectedIndex="{Binding CurrentEnvSetIndex, UpdateSourceTrigger=PropertyChanged}">
+
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+
+                        <DataGrid ItemsSource="{Binding ItemList}"
+                                    AutoGenerateColumns="False" CanUserDeleteRows="False"
+                                    SelectedItem="{Binding DataContext.CurrentItem, ElementName=RootWindow}"
+                                    Tag="{Binding DataContext, ElementName=RootWindow}"
+                                    Name="ItemGrid">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Header="キー" Binding="{Binding Key}"
+                                    CanUserSort="True" CanUserResize="True"
+                                    Width="1*"/>
+                                <DataGridTextColumn
+                                    Header="値" Binding="{Binding Value}"
+                                    CanUserSort="True" CanUserResize="True"
+                                    Width="2*"/>
+                            </DataGrid.Columns>
+
+                            <DataGrid.ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                    <MenuItem Header="編集">
+                                        <i:Interaction.Triggers>
+                                            <i:EventTrigger EventName="Click">
+                                                <b:WindowTransitionAction
+                                                    DestinationWindow="{x:Type v:EditEnvWindow}"
+                                                    Mode="ShowDialog"
+                                                    DestinationWindowTag="{Binding CurrentItem}"
+                                                    OnClosedSourceWindowTarget="{Binding}"
+                                                    OnClosedSourceWindow="UpdateList"/>
+                                            </i:EventTrigger>
+                                        </i:Interaction.Triggers>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
+                        </DataGrid>
+
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+
+            </TabControl>
+        </StackPanel>
+    </Grid>
+</Window>
